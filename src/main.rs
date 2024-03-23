@@ -37,7 +37,7 @@ pub fn main() -> iced::Result {
 pub enum Message {
     UpdateInput(String),
     SendToAI,
-    AIResponse(String),
+    AIResponse(Result<String, String>),
     Exit,
 }
 
@@ -51,6 +51,7 @@ pub struct App {
     text: String,
     ai_response: String,
     loading: State,
+    error: Option<String>,
 }
 
 impl App {
@@ -59,6 +60,7 @@ impl App {
             text: "".to_string(),
             ai_response: "".to_string(),
             loading: State::Done,
+            error: None,
         }
     }
 }
@@ -89,9 +91,18 @@ impl Application for App {
                 self.loading = State::Loading;
                 Command::perform(ask_ai(message_to_ai), Message::AIResponse)
             }
-            Message::AIResponse(res) => {
-                // self.ai_response = res.replace("\n\n", " ");
-                self.ai_response = res;
+            Message::AIResponse(result) => {
+                match result {
+                    Ok(response) => {
+                        self.error = None;
+                        self.ai_response = response;
+                    }
+                    Err(e) => {
+                        self.ai_response = "".to_string();
+                        self.error = Some(e);
+                    }
+                };
+
                 self.loading = State::Done;
                 Command::none()
             }
@@ -102,6 +113,7 @@ impl Application for App {
     fn view(&self) -> Element<Message> {
         let ai_input = container(
             text_input("AI Message", &self.text)
+                .size(20)
                 .style(iced::theme::TextInput::Custom(Box::new(
                     theming::CustomTheme,
                 )))
@@ -111,8 +123,8 @@ impl Application for App {
         .width(Length::Fill)
         .center_x();
 
-        let content = match (&self.loading, &self.ai_response) {
-            (State::Done, res) if !res.is_empty() => {
+        let content = match (&self.loading, &self.ai_response, &self.error) {
+            (State::Done, res, None) if !res.is_empty() => {
                 let scroll = Scrollable::new(
                     column![
                         vertical_space().height(4),
@@ -131,8 +143,17 @@ impl Application for App {
                     scroll
                 ]
             }
-            (State::Done, _) => column![ai_input],
-            (State::Loading, _) => column![container(text("In progress ..."))
+            (State::Done, _, Some(err_msg)) => {
+                column![
+                    ai_input,
+                    container(text("There was an error :(")).center_x(),
+                    text(err_msg)
+                ]
+            }
+            (State::Done, _, None) => {
+                column![ai_input]
+            }
+            (State::Loading, _, _) => column![container(text("In progress ..."))
                 .width(Length::Fill)
                 .height(Length::Fill)
                 .center_x()

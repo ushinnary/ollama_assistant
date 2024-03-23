@@ -39,7 +39,7 @@ impl text_input::StyleSheet for CustomTheme {
         text_input::Appearance {
             background: colors_and_themes::get_background(),
             border: Border {
-                color: palette.primary,
+                color: Color::TRANSPARENT,
                 width: 0.0,
                 radius: Radius::from(16.0),
             },
@@ -47,12 +47,18 @@ impl text_input::StyleSheet for CustomTheme {
         }
     }
 
-    fn hovered(&self, style: &Self::Style) -> text_input::Appearance {
-        style.hovered(&iced::theme::TextInput::Default)
-    }
+    fn focused(&self, _style: &Self::Style) -> text_input::Appearance {
+        let palette = get_palette_for_main_window();
 
-    fn focused(&self, style: &Self::Style) -> text_input::Appearance {
-        style.focused(&iced::theme::TextInput::Default)
+        text_input::Appearance {
+            background: colors_and_themes::get_background(),
+            border: Border {
+                color: palette.primary,
+                width: 1.0,
+                radius: Radius::from(8.0),
+            },
+            icon_color: palette.primary,
+        }
     }
 
     fn placeholder_color(&self, style: &Self::Style) -> Color {
@@ -69,6 +75,20 @@ impl text_input::StyleSheet for CustomTheme {
 
     fn selection_color(&self, style: &Self::Style) -> Color {
         style.selection_color(&iced::theme::TextInput::Default)
+    }
+
+    fn hovered(&self, _style: &Self::Style) -> text_input::Appearance {
+        let palette = get_palette_for_main_window();
+
+        text_input::Appearance {
+            background: colors_and_themes::get_background(),
+            border: Border {
+                color: palette.primary,
+                width: 1.0,
+                radius: Radius::from(8.0),
+            },
+            icon_color: palette.primary,
+        }
     }
 
     fn disabled(&self, style: &Self::Style) -> text_input::Appearance {
