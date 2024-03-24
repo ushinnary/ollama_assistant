@@ -113,6 +113,7 @@ impl Application for App {
     fn view(&self) -> Element<Message> {
         let ai_input = container(
             text_input("AI Message", &self.text)
+                .padding(8)
                 .size(20)
                 .style(iced::theme::TextInput::Custom(Box::new(
                     theming::CustomTheme,
@@ -138,7 +139,7 @@ impl Application for App {
 
                 column![
                     ai_input,
-                    container(text("AI's response : ")).padding([8, 0, 8, 0]),
+                    container(text("AI's response : ")).padding([8, 0, 8, 8]),
                     horizontal_rule(1),
                     scroll
                 ]
@@ -146,7 +147,9 @@ impl Application for App {
             (State::Done, _, Some(err_msg)) => {
                 column![
                     ai_input,
+                    vertical_space().height(4),
                     container(text("There was an error :(")).center_x(),
+                    vertical_space().height(4),
                     text(err_msg)
                 ]
             }
@@ -164,7 +167,7 @@ impl Application for App {
             .style(theming::CustomTheme.appearance(&theming::CustomStyle))
             .height(Length::Shrink)
             .width(Length::Shrink)
-            .padding(20)
+            .padding(12)
             .center_x()
             .into()
     }
