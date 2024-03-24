@@ -87,7 +87,6 @@ impl Application for App {
             }
             Message::SendToAI => {
                 let message_to_ai = self.text.clone();
-                self.text = "".to_string();
                 self.loading = State::Loading;
                 Command::perform(ask_ai(message_to_ai), Message::AIResponse)
             }
@@ -96,6 +95,7 @@ impl Application for App {
                     Ok(response) => {
                         self.error = None;
                         self.ai_response = response;
+                        self.text = "".to_string();
                     }
                     Err(e) => {
                         self.ai_response = "".to_string();
@@ -175,6 +175,7 @@ impl Application for App {
     fn subscription(&self) -> Subscription<Self::Message> {
         keyboard::on_key_press(|key, _modifiers| match key.as_ref() {
             keyboard::Key::Named(Named::Escape) => Some(Message::Exit),
+            keyboard::Key::Named(Named::Enter) => Some(Message::SendToAI),
             _ => None,
         })
     }

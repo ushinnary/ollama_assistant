@@ -30,35 +30,29 @@ impl container::StyleSheet for CustomTheme {
     }
 }
 
+fn get_text_input_appearance(border_color: Color) -> text_input::Appearance {
+    text_input::Appearance {
+        background: colors_and_themes::get_background(),
+        border: Border {
+            color: border_color,
+            width: 1.0,
+            radius: Radius::from(8.0),
+        },
+        icon_color: border_color,
+    }
+}
+
 impl text_input::StyleSheet for CustomTheme {
     type Style = iced::Theme;
 
     fn active(&self, _style: &Self::Style) -> text_input::Appearance {
-        let palette = get_palette_for_main_window();
-
-        text_input::Appearance {
-            background: colors_and_themes::get_background(),
-            border: Border {
-                color: Color::TRANSPARENT,
-                width: 0.0,
-                radius: Radius::from(16.0),
-            },
-            icon_color: palette.primary,
-        }
+        get_text_input_appearance(_style.placeholder_color(&iced::theme::TextInput::Default))
     }
 
     fn focused(&self, _style: &Self::Style) -> text_input::Appearance {
         let palette = get_palette_for_main_window();
 
-        text_input::Appearance {
-            background: colors_and_themes::get_background(),
-            border: Border {
-                color: palette.primary,
-                width: 1.0,
-                radius: Radius::from(8.0),
-            },
-            icon_color: palette.primary,
-        }
+        get_text_input_appearance(palette.primary)
     }
 
     fn placeholder_color(&self, style: &Self::Style) -> Color {
@@ -80,15 +74,7 @@ impl text_input::StyleSheet for CustomTheme {
     fn hovered(&self, _style: &Self::Style) -> text_input::Appearance {
         let palette = get_palette_for_main_window();
 
-        text_input::Appearance {
-            background: colors_and_themes::get_background(),
-            border: Border {
-                color: palette.primary,
-                width: 1.0,
-                radius: Radius::from(8.0),
-            },
-            icon_color: palette.primary,
-        }
+        get_text_input_appearance(palette.primary)
     }
 
     fn disabled(&self, style: &Self::Style) -> text_input::Appearance {
