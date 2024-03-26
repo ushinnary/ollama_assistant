@@ -1,5 +1,7 @@
 use std::{fs::OpenOptions, io::Read};
 
+use crate::debug;
+
 const APP_CONFIG_FILE_NAME: &str = "settings.json";
 
 #[derive(serde::Deserialize, serde::Serialize, Debug, Clone)]
@@ -27,7 +29,7 @@ pub fn load_settings() -> ApplicationSettings {
 
     let settings: ApplicationSettings = serde_json::from_str(&contents).unwrap_or_default();
 
-    dbg!(&settings);
+    debug!(&settings);
 
     settings
 }

@@ -13,6 +13,7 @@ use ai::ask_ai;
 
 mod ai;
 mod config;
+mod macros;
 mod theming;
 
 pub fn main() -> iced::Result {
