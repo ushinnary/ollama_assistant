@@ -1,5 +1,3 @@
-use std::process::Command;
-
 use iced::{
     border::Radius,
     color,
@@ -7,6 +5,10 @@ use iced::{
     widget::{container, text_input},
     Border, Color,
 };
+
+use crate::styles::system::system_theme_is_dark;
+
+pub const PADDING_SIZE: u16 = 8;
 
 #[derive(Debug, Clone, Copy, Default)]
 pub struct CustomTheme;
@@ -110,14 +112,4 @@ pub fn get_palette_for_main_window() -> Palette {
             ..iced::Theme::TokyoNightLight.palette()
         }
     }
-}
-
-fn system_theme_is_dark() -> bool {
-    let system_theme = Command::new("gsettings")
-        .args(["get", "org.gnome.desktop.interface", "color-scheme"])
-        .output()
-        .expect("Failed to get color scheme");
-    let system_theme = String::from_utf8(system_theme.stdout).unwrap();
-
-    system_theme.contains("dark")
 }

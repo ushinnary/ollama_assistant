@@ -1,7 +1,7 @@
 use iced::keyboard::key::Named;
 use iced::widget::container::StyleSheet;
 use iced::widget::{
-    column, container, horizontal_rule, text, text_input, vertical_space, Scrollable,
+    column, container, horizontal_rule, svg, text, text_input, vertical_space, Scrollable,
 };
 use iced::window::Position;
 use iced::{
@@ -10,11 +10,16 @@ use iced::{
 };
 
 use ai::ask_ai;
+use ui::gui::top_bar;
+
+use crate::theming::PADDING_SIZE;
 
 mod ai;
 mod config;
 mod macros;
+mod styles;
 mod theming;
+mod ui;
 
 pub fn main() -> iced::Result {
     let settings = Settings {
@@ -28,6 +33,7 @@ pub fn main() -> iced::Result {
             transparent: true,
             ..Default::default()
         },
+        antialiasing: true,
         ..Default::default()
     };
 
@@ -35,7 +41,7 @@ pub fn main() -> iced::Result {
 }
 
 #[derive(Debug, Clone)]
-pub enum Message {
+pub enum MainMessage {
     UpdateInput(String),
     SendToAI,
     AIResponse(Result<String, String>),
@@ -53,6 +59,7 @@ pub struct App {
     ai_response: String,
     loading: State,
     error: Option<String>,
+    settings_icon: svg::Handle,
 }
 
 impl App {
@@ -62,13 +69,16 @@ impl App {
             ai_response: "".to_string(),
             loading: State::Done,
             error: None,
+            settings_icon: svg::Handle::from_memory(
+                include_bytes!("../assets/settings.svg").to_vec(),
+            ),
         }
     }
 }
 
 impl Application for App {
     type Executor = executor::Default;
-    type Message = Message;
+    type Message = MainMessage;
     type Theme = iced::Theme;
     type Flags = ();
 
@@ -80,18 +90,18 @@ impl Application for App {
         String::from("AI Overlay")
     }
 
-    fn update(&mut self, message: Message) -> Command<Message> {
+    fn update(&mut self, message: MainMessage) -> Command<MainMessage> {
         match message {
-            Message::UpdateInput(text) => {
+            MainMessage::UpdateInput(text) => {
                 self.text = text;
                 Command::none()
             }
-            Message::SendToAI => {
+            MainMessage::SendToAI => {
                 let message_to_ai = self.text.clone();
                 self.loading = State::Loading;
-                Command::perform(ask_ai(message_to_ai), Message::AIResponse)
+                Command::perform(ask_ai(message_to_ai), MainMessage::AIResponse)
             }
-            Message::AIResponse(result) => {
+            MainMessage::AIResponse(result) => {
                 match result {
                     Ok(response) => {
                         self.error = None;
@@ -107,23 +117,25 @@ impl Application for App {
                 self.loading = State::Done;
                 Command::none()
             }
-            Message::Exit => window::close(window::Id::MAIN),
+            MainMessage::Exit => window::close(window::Id::MAIN),
         }
     }
 
-    fn view(&self) -> Element<Message> {
+    fn view(&self) -> Element<MainMessage> {
         let ai_input = container(
             text_input("AI Message", &self.text)
-                .padding(8)
+                .padding(PADDING_SIZE)
                 .size(20)
                 .style(iced::theme::TextInput::Custom(Box::new(
                     theming::CustomTheme,
                 )))
-                .on_input(Message::UpdateInput)
-                .on_submit(Message::SendToAI),
+                .on_input(MainMessage::UpdateInput)
+                .on_submit(MainMessage::SendToAI),
         )
         .width(Length::Fill)
         .center_x();
+
+        let header = top_bar(self.settings_icon.clone()).into();
 
         let content = match (&self.loading, &self.ai_response, &self.error) {
             (State::Done, res, None) if !res.is_empty() => {
@@ -133,14 +145,19 @@ impl Application for App {
                         container(text(res))
                             .height(Length::Fill)
                             .width(Length::Fill)
-                            .padding([0, 8, 0, 8])
+                            .padding([0, PADDING_SIZE, 0, PADDING_SIZE])
                     ]
                     .height(185),
                 );
 
                 column![
                     ai_input,
-                    container(text("AI's response : ")).padding([8, 0, 8, 8]),
+                    container(text("AI's response : ")).padding([
+                        PADDING_SIZE,
+                        0,
+                        PADDING_SIZE,
+                        PADDING_SIZE
+                    ]),
                     horizontal_rule(1),
                     scroll
                 ]
@@ -164,7 +181,7 @@ impl Application for App {
                 .center_y()],
         };
 
-        container(content)
+        container(column![header, content])
             .style(theming::CustomTheme.appearance(&theming::CustomStyle))
             .height(Length::Shrink)
             .width(Length::Shrink)
@@ -175,8 +192,8 @@ impl Application for App {
 
     fn subscription(&self) -> Subscription<Self::Message> {
         keyboard::on_key_press(|key, _modifiers| match key.as_ref() {
-            keyboard::Key::Named(Named::Escape) => Some(Message::Exit),
-            keyboard::Key::Named(Named::Enter) => Some(Message::SendToAI),
+            keyboard::Key::Named(Named::Escape) => Some(MainMessage::Exit),
+            keyboard::Key::Named(Named::Enter) => Some(MainMessage::SendToAI),
             _ => None,
         })
     }
