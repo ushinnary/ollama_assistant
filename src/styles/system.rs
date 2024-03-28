@@ -22,9 +22,12 @@ pub fn system_theme_is_dark() -> bool {
                 .args(["get", "org.gnome.desktop.interface", "color-scheme"])
                 .output()
                 .expect("Failed to get color scheme");
-            let system_theme = String::from_utf8(system_theme.stdout).unwrap();
 
-            system_theme.contains("dark")
+            if let Ok(system_theme) = String::from_utf8(system_theme.stdout) {
+                system_theme.contains("dark")
+            } else {
+                false
+            }
         }
         DesktopEnvironment::Unknown => false,
     }

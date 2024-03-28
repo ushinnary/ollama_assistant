@@ -10,15 +10,14 @@ use iced::{
 };
 
 use ai::ask_ai;
-use ui::gui::top_bar;
-
-use crate::theming::PADDING_SIZE;
+use styles::{get_palette_for_main_window, CustomTheme, PADDING_SIZE};
+use ui::gui::{search_bar, top_bar};
+use ui::RouterView;
 
 mod ai;
 mod config;
 mod macros;
 mod styles;
-mod theming;
 mod ui;
 
 pub fn main() -> iced::Result {
@@ -60,6 +59,7 @@ pub struct App {
     loading: State,
     error: Option<String>,
     settings_icon: svg::Handle,
+    view: RouterView,
 }
 
 impl App {
@@ -72,6 +72,7 @@ impl App {
             settings_icon: svg::Handle::from_memory(
                 include_bytes!("../assets/settings.svg").to_vec(),
             ),
+            view: RouterView::Home,
         }
     }
 }
@@ -122,18 +123,7 @@ impl Application for App {
     }
 
     fn view(&self) -> Element<MainMessage> {
-        let ai_input = container(
-            text_input("AI Message", &self.text)
-                .padding(PADDING_SIZE)
-                .size(20)
-                .style(iced::theme::TextInput::Custom(Box::new(
-                    theming::CustomTheme,
-                )))
-                .on_input(MainMessage::UpdateInput)
-                .on_submit(MainMessage::SendToAI),
-        )
-        .width(Length::Fill)
-        .center_x();
+        let ai_input = search_bar(&self.text).into();
 
         let header = top_bar(self.settings_icon.clone()).into();
 
@@ -182,7 +172,7 @@ impl Application for App {
         };
 
         container(column![header, content])
-            .style(theming::CustomTheme.appearance(&theming::CustomStyle))
+            .style(CustomTheme.appearance(&self.theme()))
             .height(Length::Shrink)
             .width(Length::Shrink)
             .padding(12)
@@ -199,10 +189,7 @@ impl Application for App {
     }
 
     fn theme(&self) -> Self::Theme {
-        iced::Theme::custom(
-            "Transparent".to_string(),
-            theming::get_palette_for_main_window(),
-        )
+        iced::Theme::custom("Transparent".to_string(), get_palette_for_main_window())
     }
 
     fn style(&self) -> <Self::Theme as application::StyleSheet>::Style {
