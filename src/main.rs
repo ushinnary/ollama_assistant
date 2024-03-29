@@ -1,17 +1,15 @@
 use iced::keyboard::key::Named;
 use iced::widget::container::StyleSheet;
-use iced::widget::{
-    column, container, horizontal_rule, svg, text, text_input, vertical_space, Scrollable,
-};
+use iced::widget::{column, container, svg, text};
 use iced::window::Position;
 use iced::{
-    application, executor, keyboard, window, Application, Command, Element, Length, Settings, Size,
-    Subscription,
+    application, executor, keyboard, window, Application,
+    Command, Element, Length, Settings, Size, Subscription,
 };
 
 use ai::ask_ai;
-use styles::{get_palette_for_main_window, CustomTheme, PADDING_SIZE};
-use ui::gui::{search_bar, top_bar};
+use styles::{get_palette_for_main_window, CustomTheme};
+use ui::gui::{main_page_content, top_bar};
 use ui::RouterView;
 
 mod ai;
@@ -25,8 +23,6 @@ pub fn main() -> iced::Result {
         window: window::Settings {
             decorations: false,
             size: Size::new(800.0, 300.0),
-            min_size: Some(Size::new(800.0, 300.0)),
-            max_size: Some(Size::new(800.0, 500.0)),
             position: Position::Centered,
             resizable: false,
             transparent: true,
@@ -44,6 +40,7 @@ pub enum MainMessage {
     UpdateInput(String),
     SendToAI,
     AIResponse(Result<String, String>),
+    ChangeView(RouterView),
     Exit,
 }
 
@@ -70,7 +67,8 @@ impl App {
             loading: State::Done,
             error: None,
             settings_icon: svg::Handle::from_memory(
-                include_bytes!("../assets/settings.svg").to_vec(),
+                include_bytes!("../assets/settings.svg")
+                    .to_vec(),
             ),
             view: RouterView::Home,
         }
@@ -83,7 +81,9 @@ impl Application for App {
     type Theme = iced::Theme;
     type Flags = ();
 
-    fn new(_flags: Self::Flags) -> (Self, Command<Self::Message>) {
+    fn new(
+        _flags: Self::Flags,
+    ) -> (Self, Command<Self::Message>) {
         (App::new(), Command::none())
     }
 
@@ -91,7 +91,10 @@ impl Application for App {
         String::from("AI Overlay")
     }
 
-    fn update(&mut self, message: MainMessage) -> Command<MainMessage> {
+    fn update(
+        &mut self,
+        message: MainMessage,
+    ) -> Command<MainMessage> {
         match message {
             MainMessage::UpdateInput(text) => {
                 self.text = text;
@@ -100,7 +103,10 @@ impl Application for App {
             MainMessage::SendToAI => {
                 let message_to_ai = self.text.clone();
                 self.loading = State::Loading;
-                Command::perform(ask_ai(message_to_ai), MainMessage::AIResponse)
+                Command::perform(
+                    ask_ai(message_to_ai),
+                    MainMessage::AIResponse,
+                )
             }
             MainMessage::AIResponse(result) => {
                 match result {
@@ -118,62 +124,39 @@ impl Application for App {
                 self.loading = State::Done;
                 Command::none()
             }
-            MainMessage::Exit => window::close(window::Id::MAIN),
+            MainMessage::ChangeView(view) => {
+                self.view = view;
+                Command::none()
+            }
+            MainMessage::Exit => {
+                window::close(window::Id::MAIN)
+            }
         }
     }
 
     fn view(&self) -> Element<MainMessage> {
-        let ai_input = search_bar(&self.text).into();
+        let header = top_bar(
+            self.settings_icon.clone(),
+            RouterView::Settings,
+        )
+        .into();
 
-        let header = top_bar(self.settings_icon.clone()).into();
-
-        let content = match (&self.loading, &self.ai_response, &self.error) {
-            (State::Done, res, None) if !res.is_empty() => {
-                let scroll = Scrollable::new(
-                    column![
-                        vertical_space().height(4),
-                        container(text(res))
-                            .height(Length::Fill)
-                            .width(Length::Fill)
-                            .padding([0, PADDING_SIZE, 0, PADDING_SIZE])
-                    ]
-                    .height(185),
-                );
-
-                column![
-                    ai_input,
-                    container(text("AI's response : ")).padding([
-                        PADDING_SIZE,
-                        0,
-                        PADDING_SIZE,
-                        PADDING_SIZE
-                    ]),
-                    horizontal_rule(1),
-                    scroll
-                ]
+        let content = match self.view {
+            RouterView::Home => main_page_content(
+                &self.loading,
+                &self.text,
+                &self.ai_response,
+                &self.error,
+            )
+            .into(),
+            RouterView::Settings => {
+                column![text("WIP".to_string())].into()
             }
-            (State::Done, _, Some(err_msg)) => {
-                column![
-                    ai_input,
-                    vertical_space().height(4),
-                    container(text("There was an error :(")).center_x(),
-                    vertical_space().height(4),
-                    text(err_msg)
-                ]
-            }
-            (State::Done, _, None) => {
-                column![ai_input]
-            }
-            (State::Loading, _, _) => column![container(text("In progress ..."))
-                .width(Length::Fill)
-                .height(Length::Fill)
-                .center_x()
-                .center_y()],
         };
 
         container(column![header, content])
             .style(CustomTheme.appearance(&self.theme()))
-            .height(Length::Shrink)
+            .height(Length::Fill)
             .width(Length::Shrink)
             .padding(12)
             .center_x()
@@ -181,18 +164,33 @@ impl Application for App {
     }
 
     fn subscription(&self) -> Subscription<Self::Message> {
-        keyboard::on_key_press(|key, _modifiers| match key.as_ref() {
-            keyboard::Key::Named(Named::Escape) => Some(MainMessage::Exit),
-            keyboard::Key::Named(Named::Enter) => Some(MainMessage::SendToAI),
+        keyboard::on_key_press(|key, _modifiers| match key
+            .as_ref()
+        {
+            keyboard::Key::Named(Named::Escape) => {
+                Some(MainMessage::Exit)
+            }
+            keyboard::Key::Named(Named::Backspace) => Some(
+                MainMessage::ChangeView(RouterView::Home),
+            ),
+            keyboard::Key::Named(Named::Enter) => {
+                Some(MainMessage::SendToAI)
+            }
             _ => None,
         })
     }
 
     fn theme(&self) -> Self::Theme {
-        iced::Theme::custom("Transparent".to_string(), get_palette_for_main_window())
+        iced::Theme::custom(
+            "Transparent".to_string(),
+            get_palette_for_main_window(),
+        )
     }
 
-    fn style(&self) -> <Self::Theme as application::StyleSheet>::Style {
+    fn style(
+        &self,
+    ) -> <Self::Theme as application::StyleSheet>::Style
+    {
         <Self::Theme as application::StyleSheet>::Style::default()
     }
 }

@@ -1,0 +1,1 @@
+cargo clippy --workspace --no-deps --all-features --all-targets -- -D warnings

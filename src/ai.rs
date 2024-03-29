@@ -7,10 +7,13 @@ use ollama_rs::Ollama;
 use crate::debug;
 
 lazy_static! {
-    static ref OLLAMA: Mutex<Ollama> = Mutex::new(Ollama::new_default_with_history(30));
+    static ref OLLAMA: Mutex<Ollama> =
+        Mutex::new(Ollama::new_default_with_history(30));
 }
 
-pub async fn ask_ai(message: String) -> Result<String, String> {
+pub async fn ask_ai(
+    message: String,
+) -> Result<String, String> {
     let settings = crate::config::load_settings();
 
     let mut ollama = OLLAMA.lock().await;
@@ -19,7 +22,10 @@ pub async fn ask_ai(message: String) -> Result<String, String> {
 
     ollama
         .send_chat_messages_with_history(
-            ChatMessageRequest::new(settings.clone().ai_model, vec![ChatMessage::user(message)]),
+            ChatMessageRequest::new(
+                settings.clone().ai_model,
+                vec![ChatMessage::user(message)],
+            ),
             "user".to_string(),
         )
         .await

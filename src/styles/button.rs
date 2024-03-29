@@ -4,7 +4,10 @@ pub struct TransparentButton;
 impl button::StyleSheet for TransparentButton {
     type Style = iced::Theme;
 
-    fn active(&self, style: &Self::Style) -> button::Appearance {
+    fn active(
+        &self,
+        style: &Self::Style,
+    ) -> button::Appearance {
         button::Appearance {
             shadow_offset: iced::Vector::default(),
             background: None,
@@ -18,23 +21,33 @@ impl button::StyleSheet for TransparentButton {
         }
     }
 
-    fn hovered(&self, style: &Self::Style) -> button::Appearance {
+    fn hovered(
+        &self,
+        style: &Self::Style,
+    ) -> button::Appearance {
         let active = self.active(style);
 
         button::Appearance {
-            shadow_offset: active.shadow_offset + iced::Vector::new(0.0, 1.0),
+            shadow_offset: active.shadow_offset
+                + iced::Vector::new(0.0, 1.0),
             ..active
         }
     }
 
-    fn pressed(&self, style: &Self::Style) -> button::Appearance {
+    fn pressed(
+        &self,
+        style: &Self::Style,
+    ) -> button::Appearance {
         button::Appearance {
             shadow_offset: iced::Vector::default(),
             ..self.active(style)
         }
     }
 
-    fn disabled(&self, style: &Self::Style) -> button::Appearance {
+    fn disabled(
+        &self,
+        style: &Self::Style,
+    ) -> button::Appearance {
         let active = self.active(style);
 
         button::Appearance {
