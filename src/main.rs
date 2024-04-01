@@ -1,3 +1,4 @@
+use config::ApplicationSettings;
 use iced::keyboard::key::Named;
 use iced::widget::container::StyleSheet;
 use iced::widget::{column, container, svg, text};
@@ -7,16 +8,18 @@ use iced::{
     Command, Element, Length, Settings, Size, Subscription,
 };
 
-use ai::ask_ai;
+use ai::check_ai_health;
 use styles::{get_palette_for_main_window, CustomTheme};
 use ui::gui::{main_page_content, top_bar};
 use ui::RouterView;
+use update::handle_update;
 
 mod ai;
 mod config;
 mod macros;
 mod styles;
 mod ui;
+mod update;
 
 pub fn main() -> iced::Result {
     let settings = Settings {
@@ -41,11 +44,13 @@ pub enum MainMessage {
     SendToAI,
     AIResponse(Result<String, String>),
     ChangeView(RouterView),
+    AiHealthCheck(bool),
+    RunAiHealthCheck,
     Exit,
 }
 
 #[derive(Debug, Clone)]
-pub enum State {
+pub enum AppState {
     Loading,
     Done,
 }
@@ -53,10 +58,13 @@ pub enum State {
 pub struct App {
     text: String,
     ai_response: String,
-    loading: State,
+    loading: AppState,
     error: Option<String>,
-    settings_icon: svg::Handle,
     view: RouterView,
+    config_settings: ApplicationSettings,
+    is_ai_api_live: bool,
+    settings_icon: svg::Handle,
+    back_icon: svg::Handle,
 }
 
 impl App {
@@ -64,13 +72,19 @@ impl App {
         Self {
             text: "".to_string(),
             ai_response: "".to_string(),
-            loading: State::Done,
+            loading: AppState::Done,
             error: None,
+            view: RouterView::Home,
+            config_settings: config::load_settings(),
+            is_ai_api_live: false,
             settings_icon: svg::Handle::from_memory(
                 include_bytes!("../assets/settings.svg")
                     .to_vec(),
             ),
-            view: RouterView::Home,
+            back_icon: svg::Handle::from_memory(
+                include_bytes!("../assets/back.svg")
+                    .to_vec(),
+            ),
         }
     }
 }
@@ -84,7 +98,13 @@ impl Application for App {
     fn new(
         _flags: Self::Flags,
     ) -> (Self, Command<Self::Message>) {
-        (App::new(), Command::none())
+        (
+            App::new(),
+            Command::perform(
+                check_ai_health(),
+                MainMessage::AiHealthCheck,
+            ),
+        )
     }
 
     fn title(&self) -> String {
@@ -95,49 +115,25 @@ impl Application for App {
         &mut self,
         message: MainMessage,
     ) -> Command<MainMessage> {
-        match message {
-            MainMessage::UpdateInput(text) => {
-                self.text = text;
-                Command::none()
-            }
-            MainMessage::SendToAI => {
-                let message_to_ai = self.text.clone();
-                self.loading = State::Loading;
-                Command::perform(
-                    ask_ai(message_to_ai),
-                    MainMessage::AIResponse,
-                )
-            }
-            MainMessage::AIResponse(result) => {
-                match result {
-                    Ok(response) => {
-                        self.error = None;
-                        self.ai_response = response;
-                        self.text = "".to_string();
-                    }
-                    Err(e) => {
-                        self.ai_response = "".to_string();
-                        self.error = Some(e);
-                    }
-                };
-
-                self.loading = State::Done;
-                Command::none()
-            }
-            MainMessage::ChangeView(view) => {
-                self.view = view;
-                Command::none()
-            }
-            MainMessage::Exit => {
-                window::close(window::Id::MAIN)
-            }
-        }
+        handle_update(self, message)
     }
 
     fn view(&self) -> Element<MainMessage> {
+        let (header_icon, on_icon_click) = match &self.view
+        {
+            RouterView::Home => (
+                self.settings_icon.clone(),
+                RouterView::Settings,
+            ),
+            RouterView::Settings => {
+                (self.back_icon.clone(), RouterView::Home)
+            }
+        };
+
         let header = top_bar(
-            self.settings_icon.clone(),
-            RouterView::Settings,
+            header_icon,
+            on_icon_click,
+            self.is_ai_api_live,
         )
         .into();
 

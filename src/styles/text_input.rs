@@ -12,11 +12,9 @@ impl text_input::StyleSheet for CustomTheme {
 
     fn active(
         &self,
-        _style: &Self::Style,
+        style: &Self::Style,
     ) -> text_input::Appearance {
-        get_text_input_appearance(_style.placeholder_color(
-            &iced::theme::TextInput::Default,
-        ))
+        get_text_input_appearance(style.palette().primary)
     }
 
     fn focused(
@@ -32,19 +30,19 @@ impl text_input::StyleSheet for CustomTheme {
         &self,
         style: &Self::Style,
     ) -> Color {
-        style.placeholder_color(
-            &iced::theme::TextInput::Default,
-        )
+        let [r, g, b, a] =
+            style.palette().text.into_linear();
+        Color::from_linear_rgba(r, g, b, a / 3.)
     }
 
     fn value_color(&self, style: &Self::Style) -> Color {
-        style.value_color(&iced::theme::TextInput::Default)
+        style.palette().text
     }
 
     fn disabled_color(&self, style: &Self::Style) -> Color {
-        style.disabled_color(
-            &iced::theme::TextInput::Default,
-        )
+        let [r, g, b, a] =
+            style.palette().text.into_linear();
+        Color::from_linear_rgba(r, g, b, a / 5.)
     }
 
     fn selection_color(

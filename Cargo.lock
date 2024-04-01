@@ -1824,8 +1824,9 @@ dependencies = [
 
 [[package]]
 name = "ollama-rs"
-version = "0.1.7"
-source = "git+https://github.com/ushinnary/ollama-rs?branch=store_chat_history#acc9d4b58422a62fa16988e388c2ce9e3f6f2f2e"
+version = "0.1.8"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "f05ba5ffaf4e59eb23a221677f0d0783191ad3888b235b84ab3da785d6e2a6e4"
 dependencies = [
  "reqwest",
  "serde",

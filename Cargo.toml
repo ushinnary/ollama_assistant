@@ -11,8 +11,7 @@ serde = { version = "1.0.197", features = ["derive"] }
 serde_json = "1.0.115"
 
 [dependencies.ollama-rs]
-git = "https://github.com/ushinnary/ollama-rs"
-branch = "store_chat_history"
+version = "0.1.8"
 features = ["chat-history"]
 
 [dependencies.iced]

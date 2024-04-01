@@ -13,13 +13,14 @@ impl container::StyleSheet for CustomTheme {
     ) -> container::Appearance {
         container::Appearance {
             border: Border {
-                color: Color::TRANSPARENT,
-                width: 0.0,
+                color: Color::BLACK,
+                width: 1.0,
                 radius: Radius::from(16.0),
             },
             background: Some(
                 colors_and_themes::get_background(),
             ),
+            text_color: Some(_style.palette().text),
             ..Default::default()
         }
     }

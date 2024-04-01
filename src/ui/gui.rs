@@ -1,8 +1,8 @@
 use iced::{
     alignment::{Horizontal, Vertical},
     widget::{
-        button, container, horizontal_rule, svg, text,
-        text_input, vertical_space, Column, Row,
+        button, checkbox, container, horizontal_rule, svg,
+        text, text_input, vertical_space, Column, Row,
         Scrollable,
     },
     Element, Length,
@@ -13,7 +13,7 @@ use crate::{
         button::get_btn_transparent_style, CustomTheme,
         PADDING_SIZE,
     },
-    MainMessage, State,
+    AppState, MainMessage,
 };
 
 use super::RouterView;
@@ -21,14 +21,36 @@ use super::RouterView;
 pub fn top_bar<'a>(
     icon: svg::Handle,
     view_on_click: RouterView,
+    api_is_live: bool,
 ) -> impl Into<Element<'a, MainMessage>> {
     Row::new()
         .push(
             text("AI Overlay")
                 .size(20)
-                .width(Length::FillPortion(2))
+                .width(Length::Shrink)
                 .vertical_alignment(Vertical::Center)
                 .horizontal_alignment(Horizontal::Left),
+        )
+        .push(
+            container(
+                checkbox(
+                    if api_is_live {
+                        "API Works"
+                    } else {
+                        "API is OFF"
+                    },
+                    api_is_live,
+                )
+                .on_toggle_maybe(if api_is_live {
+                    None
+                } else {
+                    Some(|_| MainMessage::RunAiHealthCheck)
+                })
+                .spacing(4)
+                .size(16),
+            )
+            .padding(4)
+            .width(Length::FillPortion(1)),
         )
         .push(
             Row::new().push(
@@ -64,7 +86,7 @@ pub fn search_bar<'a>(
 }
 
 pub fn main_page_content<'a>(
-    app_state: &State,
+    app_state: &AppState,
     user_input: &str,
     ai_response: &str,
     error: &Option<String>,
@@ -72,7 +94,7 @@ pub fn main_page_content<'a>(
     let ai_input = search_bar(user_input).into();
 
     match (app_state, ai_response, error) {
-        (State::Done, response, None)
+        (AppState::Done, response, None)
             if !response.is_empty() =>
         {
             let scroll = Scrollable::new(
@@ -89,7 +111,7 @@ pub fn main_page_content<'a>(
                                 PADDING_SIZE,
                             ]),
                     )
-                    .height(185),
+                    .height(155),
             );
 
             Column::new()
@@ -106,7 +128,7 @@ pub fn main_page_content<'a>(
                 .push(horizontal_rule(1))
                 .push(scroll)
         }
-        (State::Done, _, Some(err_msg)) => Column::new()
+        (AppState::Done, _, Some(err_msg)) => Column::new()
             .push(ai_input)
             .push(vertical_space().height(4))
             .push(
@@ -115,10 +137,10 @@ pub fn main_page_content<'a>(
             )
             .push(vertical_space().height(4))
             .push(text(err_msg)),
-        (State::Done, _, None) => {
+        (AppState::Done, _, None) => {
             Column::new().push(ai_input)
         }
-        (State::Loading, _, _) => Column::new().push(
+        (AppState::Loading, _, _) => Column::new().push(
             container(text("In progress ..."))
                 .width(Length::Fill)
                 .height(Length::Fill)
