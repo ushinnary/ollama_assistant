@@ -1,7 +1,8 @@
-use iced::{color, theme::Palette};
+use iced::{color, theme::Palette, Theme};
 
 use self::system::system_theme_is_dark;
 
+pub mod application;
 pub mod button;
 pub mod container;
 pub mod system;
@@ -23,20 +24,32 @@ mod colors_and_themes {
     }
 }
 
+#[derive(Debug, Clone, Copy)]
+pub enum AppTheme {
+    Light,
+    Dark,
+}
+
+pub fn get_app_theme() -> AppTheme {
+    if system_theme_is_dark() {
+        AppTheme::Dark
+    } else {
+        AppTheme::Light
+    }
+}
+
 pub const PADDING_SIZE: u16 = 8;
 
-pub fn get_palette_for_main_window() -> Palette {
+pub fn get_theme_for_main_window() -> Theme {
     if system_theme_is_dark() {
         // Oxacarbon without background
-        Palette {
-            background: color!(0x000000, 0.0),
-            ..iced::Theme::Oxocarbon.palette()
-        }
+        iced::Theme::Oxocarbon
     } else {
         // TokyoNightLight
-        Palette {
-            background: color!(0x000000, 0.0),
-            ..iced::Theme::TokyoNightLight.palette()
-        }
+        iced::Theme::TokyoNightLight
     }
+}
+
+pub fn get_palette_for_main_window() -> Palette {
+    get_theme_for_main_window().palette()
 }

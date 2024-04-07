@@ -71,6 +71,10 @@ impl text_input::StyleSheet for CustomTheme {
     }
 }
 
+pub fn get_text_input_style() -> iced::theme::TextInput {
+    iced::theme::TextInput::Custom(Box::new(CustomTheme))
+}
+
 fn get_text_input_appearance(
     border_color: Color,
 ) -> text_input::Appearance {

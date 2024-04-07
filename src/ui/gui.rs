@@ -1,17 +1,17 @@
 use iced::{
     alignment::{Horizontal, Vertical},
     widget::{
-        button, checkbox, container, horizontal_rule, svg,
-        text, text_input, vertical_space, Column, Row,
-        Scrollable,
+        button, checkbox, combo_box, container,
+        horizontal_rule, svg, text, text_input,
+        vertical_space, Column, Row, Scrollable,
     },
     Element, Length,
 };
 
 use crate::{
     styles::{
-        button::get_btn_transparent_style, CustomTheme,
-        PADDING_SIZE,
+        button::get_btn_transparent_style,
+        text_input::get_text_input_style, PADDING_SIZE,
     },
     AppState, MainMessage,
 };
@@ -75,9 +75,7 @@ pub fn search_bar<'a>(
         text_input("AI Message", text)
             .padding(PADDING_SIZE)
             .size(20)
-            .style(iced::theme::TextInput::Custom(
-                Box::new(CustomTheme),
-            ))
+            .style(get_text_input_style())
             .on_input(MainMessage::UpdateInput)
             .on_submit(MainMessage::SendToAI),
     )
@@ -148,4 +146,16 @@ pub fn main_page_content<'a>(
                 .center_y(),
         ),
     }
+}
+
+pub fn settings_page_content<'a>(
+    models: &'a combo_box::State<String>,
+    current_model: Option<&String>,
+) -> impl Into<Element<'a, MainMessage>> {
+    container(combo_box(
+        models,
+        "Select AI Model",
+        current_model,
+        MainMessage::UpdateConfigModel,
+    ))
 }

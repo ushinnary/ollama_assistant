@@ -1,8 +1,8 @@
-use iced::{window, Command};
+use iced::{widget::combo_box, window, Command};
 
 use crate::{
     ai::{ask_ai, check_ai_health},
-    App, AppState, MainMessage,
+    config, App, AppState, MainMessage,
 };
 
 pub fn handle_update(
@@ -29,7 +29,11 @@ pub fn handle_update(
             match result {
                 Ok(response) => {
                     app.error = None;
-                    app.ai_response = response;
+
+                    app.ai_response = response
+                        .replace('\t', " ")
+                        .replace("\n\n", "\n");
+
                     app.text = "".to_string();
                     app.is_ai_api_live = true;
                 }
@@ -61,6 +65,35 @@ pub fn handle_update(
             Command::perform(
                 check_ai_health(),
                 MainMessage::AiHealthCheck,
+            )
+        }
+        MainMessage::UpdateConfigModel(new_model) => {
+            app.config_settings.ai_model = new_model;
+            config::save_settings(
+                app.config_settings.clone(),
+            );
+            Command::none()
+        }
+        MainMessage::UpdateAvailableModels(models) => {
+            app.available_models =
+                combo_box::State::new(models);
+            Command::none()
+        }
+        MainMessage::GetAvailableModels => {
+            Command::perform(
+                crate::ai::get_ai_models_installed(),
+                |result| match result {
+                    Ok(models) => {
+                        MainMessage::UpdateAvailableModels(
+                            models,
+                        )
+                    }
+                    Err(_) => {
+                        MainMessage::UpdateAvailableModels(
+                            vec![],
+                        )
+                    }
+                },
             )
         }
         MainMessage::Exit => {

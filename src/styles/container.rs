@@ -25,3 +25,7 @@ impl container::StyleSheet for CustomTheme {
         }
     }
 }
+
+pub fn get_container_style() -> iced::theme::Container {
+    iced::theme::Container::Custom(Box::new(CustomTheme))
+}

@@ -1,16 +1,19 @@
 use config::ApplicationSettings;
 use iced::keyboard::key::Named;
-use iced::widget::container::StyleSheet;
-use iced::widget::{column, container, svg, text};
+use iced::widget::{column, combo_box, container, svg};
 use iced::window::Position;
 use iced::{
-    application, executor, keyboard, window, Application,
-    Command, Element, Length, Settings, Size, Subscription,
+    executor, keyboard, window, Application, Command,
+    Element, Length, Settings, Size, Subscription,
 };
 
 use ai::check_ai_health;
-use styles::{get_palette_for_main_window, CustomTheme};
-use ui::gui::{main_page_content, top_bar};
+use styles::application::get_application_styles;
+use styles::container::get_container_style;
+use styles::get_theme_for_main_window;
+use ui::gui::{
+    main_page_content, settings_page_content, top_bar,
+};
 use ui::RouterView;
 use update::handle_update;
 
@@ -46,6 +49,9 @@ pub enum MainMessage {
     ChangeView(RouterView),
     AiHealthCheck(bool),
     RunAiHealthCheck,
+    UpdateConfigModel(String),
+    UpdateAvailableModels(Vec<String>),
+    GetAvailableModels,
     Exit,
 }
 
@@ -65,6 +71,8 @@ pub struct App {
     is_ai_api_live: bool,
     settings_icon: svg::Handle,
     back_icon: svg::Handle,
+    // current_theme: styles::AppTheme,
+    available_models: combo_box::State<String>,
 }
 
 impl App {
@@ -85,6 +93,8 @@ impl App {
                 include_bytes!("../assets/back.svg")
                     .to_vec(),
             ),
+            // current_theme: styles::get_app_theme(),
+            available_models: combo_box::State::new(vec![]),
         }
     }
 }
@@ -100,10 +110,20 @@ impl Application for App {
     ) -> (Self, Command<Self::Message>) {
         (
             App::new(),
-            Command::perform(
-                check_ai_health(),
-                MainMessage::AiHealthCheck,
-            ),
+            Command::batch(vec![
+                Command::perform(
+                    crate::ai::get_ai_models_installed(),
+                    |v| {
+                        MainMessage::UpdateAvailableModels(
+                            v.unwrap_or_default(),
+                        )
+                    },
+                ),
+                Command::perform(
+                    check_ai_health(),
+                    MainMessage::AiHealthCheck,
+                ),
+            ]),
         )
     }
 
@@ -146,12 +166,17 @@ impl Application for App {
             )
             .into(),
             RouterView::Settings => {
-                column![text("WIP".to_string())].into()
+                column![settings_page_content(
+                    &self.available_models,
+                    Some(&self.config_settings.ai_model)
+                )
+                .into()]
+                .into()
             }
         };
 
         container(column![header, content])
-            .style(CustomTheme.appearance(&self.theme()))
+            .style(get_container_style())
             .height(Length::Fill)
             .width(Length::Shrink)
             .padding(12)
@@ -177,16 +202,13 @@ impl Application for App {
     }
 
     fn theme(&self) -> Self::Theme {
-        iced::Theme::custom(
-            "Transparent".to_string(),
-            get_palette_for_main_window(),
-        )
+        get_theme_for_main_window()
     }
 
     fn style(
         &self,
-    ) -> <Self::Theme as application::StyleSheet>::Style
+    ) -> <Self::Theme as iced::application::StyleSheet>::Style
     {
-        <Self::Theme as application::StyleSheet>::Style::default()
+        get_application_styles()
     }
 }

@@ -17,15 +17,16 @@ pub async fn ask_ai(
 ) -> Result<String, String> {
     let mut ollama = OLLAMA.lock().await;
     debug!(&message);
-    debug!(ollama.get_messages_history("user".to_string()));
+    debug!(ollama
+        .get_messages_history(settings.ai_model.clone()));
 
     ollama
         .send_chat_messages_with_history(
             ChatMessageRequest::new(
-                settings.ai_model,
+                settings.ai_model.clone(),
                 vec![ChatMessage::user(message)],
             ),
-            "user".to_string(),
+            settings.ai_model.clone(),
         )
         .await
         .map(|res| res.message.map(|msg| msg.content))
@@ -36,4 +37,19 @@ pub async fn ask_ai(
 pub async fn check_ai_health() -> bool {
     let ollama = OLLAMA.lock().await;
     ollama.list_local_models().await.is_ok()
+}
+
+pub async fn get_ai_models_installed(
+) -> Result<Vec<String>, String> {
+    let ollama = OLLAMA.lock().await;
+    ollama
+        .list_local_models()
+        .await
+        .map(|models| {
+            models
+                .iter()
+                .map(|m| m.name.clone())
+                .collect::<Vec<String>>()
+        })
+        .map_err(|err| err.to_string())
 }
