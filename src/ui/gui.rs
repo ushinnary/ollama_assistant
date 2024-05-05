@@ -2,16 +2,21 @@ use iced::{
     alignment::{Horizontal, Vertical},
     widget::{
         button, checkbox, combo_box, container,
-        horizontal_rule, svg, text, text_input,
-        vertical_space, Column, Row, Scrollable,
+        horizontal_rule, horizontal_space, svg, text,
+        text_input, vertical_space, Column, Row,
+        Scrollable,
     },
     Element, Length,
 };
 
 use crate::{
     styles::{
-        button::get_btn_transparent_style,
-        text_input::get_text_input_style, PADDING_SIZE,
+        button::{
+            get_btn_primary_style,
+            get_btn_transparent_style,
+        },
+        text_input::get_text_input_style,
+        SIZE_1, SIZE_2, SIZE_4, SIZE_5,
     },
     AppState, MainMessage,
 };
@@ -26,18 +31,19 @@ pub fn top_bar<'a>(
     Row::new()
         .push(
             text("AI Overlay")
-                .size(20)
+                .size(SIZE_5)
                 .width(Length::Shrink)
                 .vertical_alignment(Vertical::Center)
                 .horizontal_alignment(Horizontal::Left),
         )
+        .push(horizontal_space().width(SIZE_1))
         .push(
             container(
                 checkbox(
                     if api_is_live {
-                        "API Works"
+                        "Ollama is running"
                     } else {
-                        "API is OFF"
+                        "Ollama is not running"
                     },
                     api_is_live,
                 )
@@ -46,11 +52,19 @@ pub fn top_bar<'a>(
                 } else {
                     Some(|_| MainMessage::RunAiHealthCheck)
                 })
-                .spacing(4)
-                .size(16),
+                .spacing(SIZE_2)
+                .size(SIZE_4),
             )
-            .padding(4)
+            .padding(SIZE_1)
             .width(Length::FillPortion(1)),
+        )
+        .push(
+            Row::new().push(
+                button(text("Clear"))
+                    .padding(SIZE_1)
+                    .style(get_btn_primary_style())
+                    .on_press(MainMessage::ClearAiHistory),
+            ),
         )
         .push(
             Row::new().push(
@@ -65,7 +79,7 @@ pub fn top_bar<'a>(
                 .style(get_btn_transparent_style()),
             ),
         )
-        .padding([0, 0, PADDING_SIZE, 0])
+        .padding([0, 0, SIZE_2, 0])
 }
 
 pub fn search_bar<'a>(
@@ -73,8 +87,8 @@ pub fn search_bar<'a>(
 ) -> impl Into<Element<'a, MainMessage>> {
     container(
         text_input("AI Message", text)
-            .padding(PADDING_SIZE)
-            .size(20)
+            .padding(SIZE_2)
+            .size(SIZE_5)
             .style(get_text_input_style())
             .on_input(MainMessage::UpdateInput)
             .on_submit(MainMessage::SendToAI),
@@ -86,7 +100,7 @@ pub fn search_bar<'a>(
 pub fn main_page_content<'a>(
     app_state: &AppState,
     user_input: &str,
-    ai_response: &str,
+    ai_response: &'a str,
     error: &Option<String>,
 ) -> impl Into<Element<'a, MainMessage>> {
     let ai_input = search_bar(user_input).into();
@@ -100,27 +114,20 @@ pub fn main_page_content<'a>(
                     .push(vertical_space().height(4))
                     .push(
                         container(text(response))
-                            .height(Length::Fill)
                             .width(Length::Fill)
                             .padding([
-                                0,
-                                PADDING_SIZE,
-                                0,
-                                PADDING_SIZE,
+                                0, SIZE_2, 0, SIZE_2,
                             ]),
-                    )
-                    .height(155),
-            );
+                    ),
+            )
+            .height(155);
 
             Column::new()
                 .push(ai_input)
                 .push(
                     container(text("AI's response : "))
                         .padding([
-                            PADDING_SIZE,
-                            0,
-                            PADDING_SIZE,
-                            PADDING_SIZE,
+                            SIZE_2, 0, SIZE_2, SIZE_2,
                         ]),
                 )
                 .push(horizontal_rule(1))
@@ -128,7 +135,7 @@ pub fn main_page_content<'a>(
         }
         (AppState::Done, _, Some(err_msg)) => Column::new()
             .push(ai_input)
-            .push(vertical_space().height(4))
+            .push(vertical_space().height(SIZE_1))
             .push(
                 container(text("There was an error :("))
                     .center_x(),
@@ -152,10 +159,13 @@ pub fn settings_page_content<'a>(
     models: &'a combo_box::State<String>,
     current_model: Option<&String>,
 ) -> impl Into<Element<'a, MainMessage>> {
-    container(combo_box(
-        models,
-        "Select AI Model",
-        current_model,
-        MainMessage::UpdateConfigModel,
-    ))
+    container(
+        combo_box(
+            models,
+            "Select AI Model",
+            current_model,
+            MainMessage::UpdateConfigModel,
+        ), // .text_input_style(get_text_input_style()),
+           // .style(get_text_input_style()),
+    )
 }

@@ -1,7 +1,10 @@
 use iced::{widget::combo_box, window, Command};
 
 use crate::{
-    ai::{ask_ai, check_ai_health},
+    ai::{
+        ask_ai, check_ai_health, get_ai_models_installed,
+        reset_history,
+    },
     config, App, AppState, MainMessage,
 };
 
@@ -81,7 +84,7 @@ pub fn handle_update(
         }
         MainMessage::GetAvailableModels => {
             Command::perform(
-                crate::ai::get_ai_models_installed(),
+                get_ai_models_installed(),
                 |result| match result {
                     Ok(models) => {
                         MainMessage::UpdateAvailableModels(
@@ -95,6 +98,12 @@ pub fn handle_update(
                     }
                 },
             )
+        }
+        MainMessage::ClearAiHistory => {
+            app.ai_response = "".to_string();
+            Command::perform(reset_history(), |_| {
+                MainMessage::RunAiHealthCheck
+            })
         }
         MainMessage::Exit => {
             window::close(window::Id::MAIN)

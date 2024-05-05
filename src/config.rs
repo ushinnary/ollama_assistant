@@ -22,6 +22,7 @@ pub fn load_settings() -> ApplicationSettings {
         .read(true)
         .write(true)
         .create(true)
+        .truncate(true)
         .open(APP_CONFIG_FILE_NAME)
         .unwrap();
     let mut contents = String::new();
@@ -35,7 +36,6 @@ pub fn load_settings() -> ApplicationSettings {
     settings
 }
 
-#[allow(dead_code)]
 pub fn save_settings(settings: ApplicationSettings) {
     let settings =
         serde_json::to_string(&settings).unwrap();

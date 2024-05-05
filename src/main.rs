@@ -7,10 +7,9 @@ use iced::{
     Element, Length, Settings, Size, Subscription,
 };
 
-use ai::check_ai_health;
 use styles::application::get_application_styles;
 use styles::container::get_container_style;
-use styles::get_theme_for_main_window;
+use styles::{get_theme_for_main_window, SIZE_3};
 use ui::gui::{
     main_page_content, settings_page_content, top_bar,
 };
@@ -52,6 +51,7 @@ pub enum MainMessage {
     UpdateConfigModel(String),
     UpdateAvailableModels(Vec<String>),
     GetAvailableModels,
+    ClearAiHistory,
     Exit,
 }
 
@@ -120,7 +120,7 @@ impl Application for App {
                     },
                 ),
                 Command::perform(
-                    check_ai_health(),
+                    crate::ai::check_ai_health(),
                     MainMessage::AiHealthCheck,
                 ),
             ]),
@@ -165,21 +165,18 @@ impl Application for App {
                 &self.error,
             )
             .into(),
-            RouterView::Settings => {
-                column![settings_page_content(
-                    &self.available_models,
-                    Some(&self.config_settings.ai_model)
-                )
-                .into()]
-                .into()
-            }
+            RouterView::Settings => settings_page_content(
+                &self.available_models,
+                Some(&self.config_settings.ai_model),
+            )
+            .into(),
         };
 
         container(column![header, content])
             .style(get_container_style())
             .height(Length::Fill)
             .width(Length::Shrink)
-            .padding(12)
+            .padding(SIZE_3)
             .center_x()
             .into()
     }

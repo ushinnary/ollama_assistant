@@ -64,3 +64,31 @@ impl button::StyleSheet for TransparentButton {
 pub fn get_btn_transparent_style() -> iced::theme::Button {
     iced::theme::Button::Custom(Box::new(TransparentButton))
 }
+
+pub struct PrimaryButton;
+impl button::StyleSheet for PrimaryButton {
+    type Style = iced::Theme;
+
+    fn active(
+        &self,
+        style: &Self::Style,
+    ) -> button::Appearance {
+        button::Appearance {
+            shadow_offset: iced::Vector::default(),
+            background: Some(iced::Background::Color(
+                style.palette().primary,
+            )),
+            border: Border {
+                radius: 4.0.into(),
+                width: 1.,
+                color: style.palette().primary,
+            },
+            shadow: Shadow::default(),
+            text_color: iced::Color::WHITE,
+        }
+    }
+}
+
+pub fn get_btn_primary_style() -> iced::theme::Button {
+    iced::theme::Button::Custom(Box::new(PrimaryButton))
+}

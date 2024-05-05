@@ -1,2 +1,4 @@
-# WIP
-Floating search bar with AI chat
+# AI Overlay
+
+Simple window with a searchbar for chat with Ollama.
+

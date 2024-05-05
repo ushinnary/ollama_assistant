@@ -17,8 +17,7 @@ pub async fn ask_ai(
 ) -> Result<String, String> {
     let mut ollama = OLLAMA.lock().await;
     debug!(&message);
-    debug!(ollama
-        .get_messages_history(settings.ai_model.clone()));
+    debug!(ollama.get_messages_history(&settings.ai_model));
 
     ollama
         .send_chat_messages_with_history(
@@ -26,7 +25,7 @@ pub async fn ask_ai(
                 settings.ai_model.clone(),
                 vec![ChatMessage::user(message)],
             ),
-            settings.ai_model.clone(),
+            &settings.ai_model,
         )
         .await
         .map(|res| res.message.map(|msg| msg.content))
@@ -52,4 +51,9 @@ pub async fn get_ai_models_installed(
                 .collect::<Vec<String>>()
         })
         .map_err(|err| err.to_string())
+}
+
+pub async fn reset_history() {
+    let mut ollama = OLLAMA.lock().await;
+    *ollama = Ollama::new_default_with_history(30);
 }
