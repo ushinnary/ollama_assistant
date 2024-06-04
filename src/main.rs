@@ -1,6 +1,6 @@
 use config::ApplicationSettings;
 use iced::keyboard::key::Named;
-use iced::widget::{column, combo_box, container, svg};
+use iced::widget::{column, container, svg};
 use iced::window::Position;
 use iced::{
     executor, keyboard, window, Application, Command,
@@ -72,7 +72,7 @@ pub struct App {
     settings_icon: svg::Handle,
     back_icon: svg::Handle,
     // current_theme: styles::AppTheme,
-    available_models: combo_box::State<String>,
+    available_models: Vec<String>,
 }
 
 impl App {
@@ -94,7 +94,7 @@ impl App {
                     .to_vec(),
             ),
             // current_theme: styles::get_app_theme(),
-            available_models: combo_box::State::new(vec![]),
+            available_models: vec![],
         }
     }
 }
@@ -166,8 +166,8 @@ impl Application for App {
             )
             .into(),
             RouterView::Settings => settings_page_content(
-                &self.available_models,
-                Some(&self.config_settings.ai_model),
+                self.available_models.clone(),
+                Some(self.config_settings.ai_model.clone()),
             )
             .into(),
         };

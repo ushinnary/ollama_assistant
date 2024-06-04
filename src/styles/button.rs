@@ -87,6 +87,18 @@ impl button::StyleSheet for PrimaryButton {
             text_color: iced::Color::WHITE,
         }
     }
+
+    fn hovered(
+        &self,
+        style: &Self::Style,
+    ) -> button::Appearance {
+        button::Appearance {
+            background: Some(iced::Background::Color(
+                style.palette().success,
+            )),
+            ..self.active(style)
+        }
+    }
 }
 
 pub fn get_btn_primary_style() -> iced::theme::Button {

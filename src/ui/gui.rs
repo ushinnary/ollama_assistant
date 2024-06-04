@@ -1,10 +1,9 @@
 use iced::{
     alignment::{Horizontal, Vertical},
     widget::{
-        button, checkbox, combo_box, container,
-        horizontal_rule, horizontal_space, svg, text,
-        text_input, vertical_space, Column, Row,
-        Scrollable,
+        button, checkbox, container, horizontal_rule,
+        horizontal_space, pick_list, svg, text, text_input,
+        vertical_space, Column, Row, Scrollable,
     },
     Element, Length,
 };
@@ -15,6 +14,7 @@ use crate::{
             get_btn_primary_style,
             get_btn_transparent_style,
         },
+        dropdown::get_dropdown_style,
         text_input::get_text_input_style,
         SIZE_1, SIZE_2, SIZE_4, SIZE_5,
     },
@@ -156,16 +156,18 @@ pub fn main_page_content<'a>(
 }
 
 pub fn settings_page_content<'a>(
-    models: &'a combo_box::State<String>,
-    current_model: Option<&String>,
+    models: Vec<String>,
+    current_model: Option<String>,
 ) -> impl Into<Element<'a, MainMessage>> {
     container(
-        combo_box(
+        pick_list(
             models,
-            "Select AI Model",
             current_model,
             MainMessage::UpdateConfigModel,
-        ), // .text_input_style(get_text_input_style()),
-           // .style(get_text_input_style()),
+        )
+        .placeholder("Select AI Model")
+        .style(get_dropdown_style())
+        .width(Length::Fill)
+        .text_line_height(2.),
     )
 }

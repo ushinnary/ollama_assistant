@@ -5,6 +5,7 @@ use self::system::system_theme_is_dark;
 pub mod application;
 pub mod button;
 pub mod container;
+pub mod dropdown;
 pub mod system;
 pub mod text_input;
 

@@ -23,7 +23,7 @@ impl text_input::StyleSheet for CustomTheme {
     ) -> text_input::Appearance {
         let palette = get_palette_for_main_window();
 
-        get_text_input_appearance(palette.primary)
+        get_text_input_appearance(palette.success)
     }
 
     fn placeholder_color(
@@ -60,7 +60,7 @@ impl text_input::StyleSheet for CustomTheme {
     ) -> text_input::Appearance {
         let palette = get_palette_for_main_window();
 
-        get_text_input_appearance(palette.primary)
+        get_text_input_appearance(palette.success)
     }
 
     fn disabled(

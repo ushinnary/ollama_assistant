@@ -1,4 +1,4 @@
-use iced::{widget::combo_box, window, Command};
+use iced::{window, Command};
 
 use crate::{
     ai::{
@@ -78,8 +78,7 @@ pub fn handle_update(
             Command::none()
         }
         MainMessage::UpdateAvailableModels(models) => {
-            app.available_models =
-                combo_box::State::new(models);
+            app.available_models = models;
             Command::none()
         }
         MainMessage::GetAvailableModels => {
