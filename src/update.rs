@@ -1,10 +1,7 @@
 use iced::{window, Command};
 
 use crate::{
-    ai::{
-        ask_ai, check_ai_health, get_ai_models_installed,
-        reset_history,
-    },
+    ai::{ask_ai, check_ai_health, get_ai_models_installed, reset_history},
     config, App, AppState, MainMessage,
 };
 
@@ -21,10 +18,7 @@ pub fn handle_update(
             let message_to_ai = app.text.clone();
             app.loading = AppState::Loading;
             Command::perform(
-                ask_ai(
-                    message_to_ai,
-                    app.config_settings.clone(),
-                ),
+                ask_ai(message_to_ai, app.config_settings.clone()),
                 MainMessage::AIResponse,
             )
         }
@@ -33,9 +27,8 @@ pub fn handle_update(
                 Ok(response) => {
                     app.error = None;
 
-                    app.ai_response = response
-                        .replace('\t', " ")
-                        .replace("\n\n", "\n");
+                    app.ai_response =
+                        response.replace('\t', " ").replace("\n\n", "\n");
 
                     app.text = "".to_string();
                     app.is_ai_api_live = true;
@@ -44,10 +37,7 @@ pub fn handle_update(
                     app.ai_response = "".to_string();
                     app.error = Some(e);
 
-                    return handle_update(
-                        app,
-                        MainMessage::RunAiHealthCheck,
-                    );
+                    return handle_update(app, MainMessage::RunAiHealthCheck);
                 }
             };
 
@@ -65,16 +55,11 @@ pub fn handle_update(
         }
         MainMessage::RunAiHealthCheck => {
             app.loading = AppState::Loading;
-            Command::perform(
-                check_ai_health(),
-                MainMessage::AiHealthCheck,
-            )
+            Command::perform(check_ai_health(), MainMessage::AiHealthCheck)
         }
         MainMessage::UpdateConfigModel(new_model) => {
             app.config_settings.ai_model = new_model;
-            config::save_settings(
-                app.config_settings.clone(),
-            );
+            config::save_settings(app.config_settings.clone());
             Command::none()
         }
         MainMessage::UpdateAvailableModels(models) => {
@@ -82,30 +67,15 @@ pub fn handle_update(
             Command::none()
         }
         MainMessage::GetAvailableModels => {
-            Command::perform(
-                get_ai_models_installed(),
-                |result| match result {
-                    Ok(models) => {
-                        MainMessage::UpdateAvailableModels(
-                            models,
-                        )
-                    }
-                    Err(_) => {
-                        MainMessage::UpdateAvailableModels(
-                            vec![],
-                        )
-                    }
-                },
-            )
+            Command::perform(get_ai_models_installed(), |result| match result {
+                Ok(models) => MainMessage::UpdateAvailableModels(models),
+                Err(_) => MainMessage::UpdateAvailableModels(vec![]),
+            })
         }
         MainMessage::ClearAiHistory => {
             app.ai_response = "".to_string();
-            Command::perform(reset_history(), |_| {
-                MainMessage::RunAiHealthCheck
-            })
+            Command::perform(reset_history(), |_| MainMessage::RunAiHealthCheck)
         }
-        MainMessage::Exit => {
-            window::close(window::Id::MAIN)
-        }
+        MainMessage::Exit => window::close(window::Id::MAIN),
     }
 }

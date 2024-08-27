@@ -17,11 +17,7 @@ mod colors_and_themes {
     use super::get_theme_for_main_window;
 
     pub fn get_background() -> Background {
-        Background::Color(
-            get_theme_for_main_window()
-                .palette()
-                .background,
-        )
+        Background::Color(get_theme_for_main_window().palette().background)
     }
 }
 

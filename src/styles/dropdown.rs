@@ -1,8 +1,6 @@
 use std::rc::Rc;
 
-use iced::{
-    border::Radius, overlay::menu, widget::pick_list,
-};
+use iced::{border::Radius, overlay::menu, widget::pick_list};
 
 use super::{colors_and_themes, CustomTheme};
 
@@ -45,10 +43,7 @@ impl pick_list::StyleSheet for CustomTheme {
 impl iced::overlay::menu::StyleSheet for CustomTheme {
     type Style = iced::Theme;
 
-    fn appearance(
-        &self,
-        style: &Self::Style,
-    ) -> menu::Appearance {
+    fn appearance(&self, style: &Self::Style) -> menu::Appearance {
         menu::Appearance {
             text_color: style.palette().text,
             background: colors_and_themes::get_background(),
