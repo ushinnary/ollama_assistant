@@ -21,11 +21,11 @@ mod colors_and_themes {
     }
 }
 
-pub const SIZE_1: u16 = 4;
-pub const SIZE_2: u16 = 8;
-pub const SIZE_3: u16 = 12;
-pub const SIZE_4: u16 = 16;
-pub const SIZE_5: u16 = 20;
+pub const SIZE_1: f32 = 4.;
+pub const SIZE_2: f32 = 8.;
+pub const SIZE_3: f32 = 12.;
+pub const SIZE_4: f32 = 16.;
+pub const SIZE_5: f32 = 20.;
 
 pub fn get_theme_for_main_window() -> Theme {
     if system_theme_is_dark() {

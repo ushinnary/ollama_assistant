@@ -1,14 +1,9 @@
 use config::ApplicationSettings;
 use iced::keyboard::key::Named;
 use iced::widget::{column, container, svg};
-use iced::window::Position;
-use iced::{
-    executor, keyboard, window, Application, Command, Element, Length,
-    Settings, Size, Subscription,
-};
+use iced::{keyboard, Element, Length, Subscription, Task, Theme};
 
-use styles::application::get_application_styles;
-use styles::container::get_container_style;
+// use styles::container::get_container_style;
 use styles::{get_theme_for_main_window, SIZE_3};
 use ui::gui::{main_page_content, settings_page_content, top_bar};
 use ui::RouterView;
@@ -21,20 +16,10 @@ mod ui;
 mod update;
 
 pub fn main() -> iced::Result {
-    let settings = Settings {
-        window: window::Settings {
-            decorations: false,
-            size: Size::new(800.0, 300.0),
-            position: Position::Centered,
-            resizable: false,
-            transparent: true,
-            ..Default::default()
-        },
-        antialiasing: true,
-        ..Default::default()
-    };
-
-    App::run(settings)
+    iced::application(App::title, App::update, App::view)
+        .subscription(App::subscription)
+        .theme(App::theme)
+        .run_with(App::new)
 }
 
 #[derive(Debug, Clone)]
@@ -73,41 +58,30 @@ pub struct App {
 }
 
 impl App {
-    fn new() -> Self {
-        Self {
-            text: "".to_string(),
-            ai_response: "".to_string(),
-            loading: AppState::Done,
-            error: None,
-            view: RouterView::Home,
-            config_settings: config::load_settings(),
-            is_ai_api_live: false,
-            settings_icon: svg::Handle::from_memory(
-                include_bytes!("../assets/settings.svg").to_vec(),
-            ),
-            back_icon: svg::Handle::from_memory(
-                include_bytes!("../assets/back.svg").to_vec(),
-            ),
-            // current_theme: styles::get_app_theme(),
-            available_models: vec![],
-        }
-    }
-}
-
-impl Application for App {
-    type Executor = executor::Default;
-    type Message = MainMessage;
-    type Theme = iced::Theme;
-    type Flags = ();
-
-    fn new(_flags: Self::Flags) -> (Self, Command<Self::Message>) {
+    fn new() -> (Self, Task<MainMessage>) {
         (
-            App::new(),
-            Command::batch(vec![
-                Command::perform(crate::ai::get_ai_models_installed(), |v| {
+            Self {
+                text: "".to_string(),
+                ai_response: "".to_string(),
+                loading: AppState::Done,
+                error: None,
+                view: RouterView::Home,
+                config_settings: config::load_settings(),
+                is_ai_api_live: false,
+                settings_icon: svg::Handle::from_memory(
+                    include_bytes!("../assets/settings.svg").to_vec(),
+                ),
+                back_icon: svg::Handle::from_memory(
+                    include_bytes!("../assets/back.svg").to_vec(),
+                ),
+                // current_theme: styles::get_app_theme(),
+                available_models: vec![],
+            },
+            Task::batch(vec![
+                Task::perform(crate::ai::get_ai_models_installed(), |v| {
                     MainMessage::UpdateAvailableModels(v.unwrap_or_default())
                 }),
-                Command::perform(
+                Task::perform(
                     crate::ai::check_ai_health(),
                     MainMessage::AiHealthCheck,
                 ),
@@ -119,7 +93,7 @@ impl Application for App {
         String::from("AI Overlay")
     }
 
-    fn update(&mut self, message: MainMessage) -> Command<MainMessage> {
+    fn update(&mut self, message: MainMessage) -> Task<MainMessage> {
         handle_update(self, message)
     }
 
@@ -150,15 +124,15 @@ impl Application for App {
         };
 
         container(column![header, content])
-            .style(get_container_style())
+            // .style(get_container_style())
             .height(Length::Fill)
             .width(Length::Shrink)
             .padding(SIZE_3)
-            .center_x()
+            .center_x(Length::Fill)
             .into()
     }
 
-    fn subscription(&self) -> Subscription<Self::Message> {
+    fn subscription(&self) -> Subscription<MainMessage> {
         keyboard::on_key_press(|key, _modifiers| match key.as_ref() {
             keyboard::Key::Named(Named::Escape) => Some(MainMessage::Exit),
             keyboard::Key::Named(Named::Backspace) => {
@@ -169,11 +143,11 @@ impl Application for App {
         })
     }
 
-    fn theme(&self) -> Self::Theme {
+    fn theme(&self) -> Theme {
         get_theme_for_main_window()
     }
 
-    fn style(&self) -> <Self::Theme as iced::application::StyleSheet>::Style {
-        get_application_styles()
-    }
+    // fn style(&self) -> <Self::Theme as iced::application::StyleSheet>::Style {
+    //     get_application_styles()
+    // }
 }

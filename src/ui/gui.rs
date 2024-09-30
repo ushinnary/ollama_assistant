@@ -5,15 +5,18 @@ use iced::{
         pick_list, svg, text, text_input, vertical_space, Column, Row,
         Scrollable,
     },
-    Element, Length,
+    Element, Length, Padding,
 };
 
 use crate::{
     styles::{
-        button::{get_btn_primary_style, get_btn_transparent_style},
-        dropdown::get_dropdown_style,
-        text_input::get_text_input_style,
-        SIZE_1, SIZE_2, SIZE_4, SIZE_5,
+        // button::{get_btn_primary_style, get_btn_transparent_style},
+        // dropdown::get_dropdown_style,
+        // text_input::get_text_input_style,
+        SIZE_1,
+        SIZE_2,
+        SIZE_4,
+        SIZE_5,
     },
     AppState, MainMessage,
 };
@@ -30,8 +33,8 @@ pub fn top_bar<'a>(
             text("AI Overlay")
                 .size(SIZE_5)
                 .width(Length::Shrink)
-                .vertical_alignment(Vertical::Center)
-                .horizontal_alignment(Horizontal::Left),
+                .align_y(Vertical::Center)
+                .align_x(Horizontal::Left),
         )
         .push(horizontal_space().width(SIZE_1))
         .push(
@@ -59,7 +62,7 @@ pub fn top_bar<'a>(
             Row::new().push(
                 button(text("Clear"))
                     .padding(SIZE_1)
-                    .style(get_btn_primary_style())
+                    // .style(get_btn_primary_style())
                     .on_press(MainMessage::ClearAiHistory),
             ),
         )
@@ -70,11 +73,10 @@ pub fn top_bar<'a>(
                         .width(Length::Fixed(18.))
                         .height(Length::Fixed(18.)),
                 )
-                .on_press(MainMessage::ChangeView(view_on_click))
-                .style(get_btn_transparent_style()),
+                .on_press(MainMessage::ChangeView(view_on_click)), // .style(get_btn_transparent_style()),
             ),
         )
-        .padding([0, 0, SIZE_2, 0])
+        .padding(Padding { right: SIZE_2, ..Default::default() })
 }
 
 pub fn search_bar<'a>(text: &str) -> impl Into<Element<'a, MainMessage>> {
@@ -82,19 +84,19 @@ pub fn search_bar<'a>(text: &str) -> impl Into<Element<'a, MainMessage>> {
         text_input("AI Message", text)
             .padding(SIZE_2)
             .size(SIZE_5)
-            .style(get_text_input_style())
+            // .style(get_text_input_style())
             .on_input(MainMessage::UpdateInput)
             .on_submit(MainMessage::SendToAI),
     )
     .width(Length::Fill)
-    .center_x()
+    .center_x(Length::Fill)
 }
 
 pub fn main_page_content<'a>(
     app_state: &AppState,
     user_input: &str,
     ai_response: &'a str,
-    error: &Option<String>,
+    error: &'a Option<String>,
 ) -> impl Into<Element<'a, MainMessage>> {
     let ai_input = search_bar(user_input).into();
 
@@ -104,24 +106,28 @@ pub fn main_page_content<'a>(
                 Column::new().push(vertical_space().height(4)).push(
                     container(text(response))
                         .width(Length::Fill)
-                        .padding([0, SIZE_2, 0, SIZE_2]),
+                        .padding([0., SIZE_2]),
                 ),
             )
             .height(155);
 
             Column::new()
                 .push(ai_input)
-                .push(
-                    container(text("AI's response : "))
-                        .padding([SIZE_2, 0, SIZE_2, SIZE_2]),
-                )
+                .push(container(text("AI's response : ")).padding(Padding {
+                    left: SIZE_2,
+                    right: SIZE_2,
+                    bottom: SIZE_2,
+                    ..Default::default()
+                }))
                 .push(horizontal_rule(1))
                 .push(scroll)
         }
         (AppState::Done, _, Some(err_msg)) => Column::new()
             .push(ai_input)
             .push(vertical_space().height(SIZE_1))
-            .push(container(text("There was an error :(")).center_x())
+            .push(
+                container(text("There was an error :(")).center_x(Length::Fill),
+            )
             .push(vertical_space().height(4))
             .push(text(err_msg)),
         (AppState::Done, _, None) => Column::new().push(ai_input),
@@ -129,8 +135,8 @@ pub fn main_page_content<'a>(
             container(text("In progress ..."))
                 .width(Length::Fill)
                 .height(Length::Fill)
-                .center_x()
-                .center_y(),
+                .center_x(Length::Fill)
+                .center_y(Length::Fill),
         ),
     }
 }
@@ -142,7 +148,7 @@ pub fn settings_page_content<'a>(
     container(
         pick_list(models, current_model, MainMessage::UpdateConfigModel)
             .placeholder("Select AI Model")
-            .style(get_dropdown_style())
+            // .style(get_dropdown_style())
             .width(Length::Fill)
             .text_line_height(2.),
     )

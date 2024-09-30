@@ -1,23 +1,20 @@
-use iced::{window, Command};
+use iced::{window, Task};
 
 use crate::{
     ai::{ask_ai, check_ai_health, get_ai_models_installed, reset_history},
     config, App, AppState, MainMessage,
 };
 
-pub fn handle_update(
-    app: &mut App,
-    message: MainMessage,
-) -> Command<MainMessage> {
+pub fn handle_update(app: &mut App, message: MainMessage) -> Task<MainMessage> {
     match message {
         MainMessage::UpdateInput(text) => {
             app.text = text;
-            Command::none()
+            Task::none()
         }
         MainMessage::SendToAI => {
             let message_to_ai = app.text.clone();
             app.loading = AppState::Loading;
-            Command::perform(
+            Task::perform(
                 ask_ai(message_to_ai, app.config_settings.clone()),
                 MainMessage::AIResponse,
             )
@@ -42,40 +39,40 @@ pub fn handle_update(
             };
 
             app.loading = AppState::Done;
-            Command::none()
+            Task::none()
         }
         MainMessage::ChangeView(view) => {
             app.view = view;
-            Command::none()
+            Task::none()
         }
         MainMessage::AiHealthCheck(is_live) => {
             app.is_ai_api_live = is_live;
             app.loading = AppState::Done;
-            Command::none()
+            Task::none()
         }
         MainMessage::RunAiHealthCheck => {
             app.loading = AppState::Loading;
-            Command::perform(check_ai_health(), MainMessage::AiHealthCheck)
+            Task::perform(check_ai_health(), MainMessage::AiHealthCheck)
         }
         MainMessage::UpdateConfigModel(new_model) => {
             app.config_settings.ai_model = new_model;
             config::save_settings(app.config_settings.clone());
-            Command::none()
+            Task::none()
         }
         MainMessage::UpdateAvailableModels(models) => {
             app.available_models = models;
-            Command::none()
+            Task::none()
         }
         MainMessage::GetAvailableModels => {
-            Command::perform(get_ai_models_installed(), |result| match result {
+            Task::perform(get_ai_models_installed(), |result| match result {
                 Ok(models) => MainMessage::UpdateAvailableModels(models),
                 Err(_) => MainMessage::UpdateAvailableModels(vec![]),
             })
         }
         MainMessage::ClearAiHistory => {
             app.ai_response = "".to_string();
-            Command::perform(reset_history(), |_| MainMessage::RunAiHealthCheck)
+            Task::perform(reset_history(), |_| MainMessage::RunAiHealthCheck)
         }
-        MainMessage::Exit => window::close(window::Id::MAIN),
+        MainMessage::Exit => window::close(window::Id::unique()),
     }
 }
